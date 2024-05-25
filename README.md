@@ -46,3 +46,8 @@ Contact
 =======
 
 The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+
+
+About this repository
+=======
+I am learning to use this repository with tutorials in https://academy.astronomer.io/, I am not delete any file in this first commit. 
