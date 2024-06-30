@@ -9,8 +9,8 @@ default_args = {
     'retry_delay':timedelta(minutes=5)
 }
 
-def _downloading_data(**kwargs):
-    print(kwargs)
+def _downloading_data(my_param, ds):
+    print(my_param)
 
 with DAG(dag_id='simple_dag', 
         start_date=days_ago(3),
@@ -23,7 +23,8 @@ with DAG(dag_id='simple_dag',
 
     downloading_data = PythonOperator(
         task_id = 'downloading_data',
-        python_callable=_downloading_data
+        python_callable=_downloading_data,
+        op_kwargs={'my_param': 42}
     )
 
     task_1 = DummyOperator(
