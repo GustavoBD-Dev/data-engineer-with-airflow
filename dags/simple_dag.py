@@ -12,12 +12,16 @@ default_args = {
     'retry_delay':timedelta(minutes=5)
 }
 
-def _downloading_data(**kwargs):
+def _downloading_data(ti, **kwargs):
     with open('/tmp/my_file.txt', 'w') as f:
         f.write('my_data')
+    ti.xcom_push(key='my_key', value=43) # create the values to the next dependencie
+    # return 42
 
-def _checking_data():
-    print('check_data')
+def _checking_data(ti):
+    # ti receives the values of the previous task
+    xcom = ti.xcom_pull(key='my_key', task_ids=['downloading_data'])
+    print(xcom)
 
 with DAG(dag_id='simple_dag', 
         start_date=days_ago(3),
@@ -33,9 +37,9 @@ with DAG(dag_id='simple_dag',
         python_callable=_downloading_data
     )
 
-    task_1 = DummyOperator(
-        task_id = 'task_1'
-    )
+    # task_1 = DummyOperator(
+    #     task_id = 'task_1'
+    # )
 
     checking_data = PythonOperator(
         task_id = 'checking_data',
@@ -57,7 +61,7 @@ with DAG(dag_id='simple_dag',
     # TASK DEPENDENCIES
 
     # lineal dependencies
-    # downloading_data >> waiting_for_data >> processing_data
+    downloading_data >> checking_data >> waiting_for_data >> processing_data
     # with chain
     # chain(downloading_data , waiting_for_data , processing_data)
     
@@ -69,4 +73,4 @@ with DAG(dag_id='simple_dag',
     #       -> task_4
     # task2 -> task_3
     #       -> task_4
-    cross_downstream([downloading_data, checking_data], [waiting_for_data, processing_data])
+    # cross_downstream([downloading_data, checking_data], [waiting_for_data, processing_data])
