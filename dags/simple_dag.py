@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
+from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
 
@@ -37,4 +38,9 @@ with DAG(dag_id='simple_dag',
         fs_conn_id='fs_default', # ID of the connection
         filepath='my_file.txt',
         poke_interval=30 # want to check every 30 seconds
+    )
+
+    processing_data = BashOperator(
+        task_id = 'processing_data',
+        bash_command='exit 0'
     )
