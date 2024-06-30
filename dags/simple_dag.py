@@ -23,9 +23,13 @@ def _checking_data(ti):
     xcom = ti.xcom_pull(key='my_key', task_ids=['downloading_data'])
     print(xcom)
 
+def _failure(context):
+    print("On callback failure")
+    print(context)
+
 with DAG(dag_id='simple_dag', 
         start_date=days_ago(3),
-        catchup=False, 
+        catchup=True, 
         default_args=default_args, # agrs into task_#
         # max_active_runs=2, # maximun number of DAG runs for specific DAG
         schedule_interval="@daily") as dag:
@@ -55,13 +59,14 @@ with DAG(dag_id='simple_dag',
 
     processing_data = BashOperator(
         task_id = 'processing_data',
-        bash_command='exit 0'
+        bash_command='exit 1',
+        on_failure_callback=_failure
     )
 
     # TASK DEPENDENCIES
 
     # lineal dependencies
-    downloading_data >> checking_data >> waiting_for_data >> processing_data
+    downloading_data >> checking_data >> processing_data >> waiting_for_data
     # with chain
     # chain(downloading_data , waiting_for_data , processing_data)
     
