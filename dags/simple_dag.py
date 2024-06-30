@@ -4,6 +4,7 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.filesystem import FileSensor
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
+from airflow.models.baseoperator import chain, cross_downstream
 from datetime import datetime, timedelta
 
 default_args = {
@@ -14,6 +15,9 @@ default_args = {
 def _downloading_data(**kwargs):
     with open('/tmp/my_file.txt', 'w') as f:
         f.write('my_data')
+
+def _checking_data():
+    print('check_data')
 
 with DAG(dag_id='simple_dag', 
         start_date=days_ago(3),
@@ -33,6 +37,11 @@ with DAG(dag_id='simple_dag',
         task_id = 'task_1'
     )
 
+    checking_data = PythonOperator(
+        task_id = 'checking_data',
+        python_callable=_checking_data
+    )
+
     waiting_for_data = FileSensor(
         task_id='waiting_for_data',
         fs_conn_id='fs_default', # ID of the connection
@@ -44,3 +53,20 @@ with DAG(dag_id='simple_dag',
         task_id = 'processing_data',
         bash_command='exit 0'
     )
+
+    # TASK DEPENDENCIES
+
+    # lineal dependencies
+    # downloading_data >> waiting_for_data >> processing_data
+    # with chain
+    # chain(downloading_data , waiting_for_data , processing_data)
+    
+    # One task with two or more task dependencies
+    # downloading_data >> [waiting_for_data , processing_data]
+
+    # cross dependencies
+    # task1 -> task_3
+    #       -> task_4
+    # task2 -> task_3
+    #       -> task_4
+    cross_downstream([downloading_data, checking_data], [waiting_for_data, processing_data])
